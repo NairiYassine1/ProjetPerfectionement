@@ -1,0 +1,98 @@
+<div class="auth-container">
+  <div class="auth-card">
+
+    <h3 class="title" *ngIf="!mustChangePassword">Connexion client</h3>
+    <h3 class="title" *ngIf="mustChangePassword">Changement de mot de passe requis</h3>
+    <p class="subtitle" *ngIf="!mustChangePassword">
+      Veuillez vous connecter afin de suivre l’état de votre demande d’ouverture de compte.
+    </p>
+
+    <form *ngIf="!mustChangePassword" [formGroup]="loginForm" (ngSubmit)="submit()">
+
+      <div class="form-group">
+        <label>Email</label>
+        <input
+          type="email"
+          class="form-control"
+          formControlName="email"
+          placeholder="exemple@email.com">
+        <small class="error" *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid">
+          Email invalide
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <div class="input-with-btn">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            class="form-control"
+            formControlName="password"
+            placeholder="••••••••">
+          <button type="button" class="toggle-btn" (click)="showPassword = !showPassword" aria-label="Afficher mot de passe">
+            <svg *ngIf="!showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="#6c757d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="12" cy="12" r="3" stroke="#6c757d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <svg *ngIf="showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M17.94 17.94A10.97 10.97 0 0 1 12 19c-7 0-11-7-11-7 .95-1.76 2.24-3.31 3.78-4.58" stroke="#6c757d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M1 1l22 22" stroke="#6c757d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <small class="error" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid">
+          Mot de passe requis
+        </small>
+      </div>
+
+      <button class="btn btn-warning w-100 mt-3" type="submit"
+              [disabled]="loginForm.invalid">
+        Se connecter
+      </button>
+    </form>
+
+    <form *ngIf="mustChangePassword" [formGroup]="changeForm" (ngSubmit)="submitChange()">
+      <div class="form-group">
+        <label>Nouveau mot de passe</label>
+        <div class="input-with-btn">
+          <input [type]="showNewPassword ? 'text' : 'password'" class="form-control" formControlName="newPassword" placeholder="Nouveau mot de passe">
+          <button type="button" class="toggle-btn" (click)="showNewPassword = !showNewPassword" aria-label="Afficher nouveau mot de passe">
+            <svg *ngIf="!showNewPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="#6c757d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="12" cy="12" r="3" stroke="#6c757d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <svg *ngIf="showNewPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M17.94 17.94A10.97 10.97 0 0 1 12 19c-7 0-11-7-11-7 .95-1.76 2.24-3.31 3.78-4.58" stroke="#6c757d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M1 1l22 22" stroke="#6c757d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <small class="error" *ngIf="changeForm.get('newPassword')?.touched && changeForm.get('newPassword')?.hasError('minlength')">Mot de passe (min 6 caractères)</small>
+        <small class="error" *ngIf="changeForm.get('newPassword')?.touched && changeForm.get('newPassword')?.hasError('maxlength')">Mot de passe (max 10 caractères)</small>
+        <small class="error" *ngIf="changeForm.get('newPassword')?.touched && changeForm.get('newPassword')?.hasError('pattern')">Doit contenir au moins 3 chiffres et un caractère spécial (ex: . ou -)</small>
+      </div>
+
+      <div class="form-group">
+        <label>Confirmer</label>
+        <div class="input-with-btn">
+          <input [type]="showConfirmPassword ? 'text' : 'password'" class="form-control" formControlName="confirm" placeholder="Confirmer le mot de passe">
+          <button type="button" class="toggle-btn" (click)="showConfirmPassword = !showConfirmPassword" aria-label="Afficher confirmer mot de passe">
+            <svg *ngIf="!showConfirmPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="#6c757d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="12" cy="12" r="3" stroke="#6c757d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <svg *ngIf="showConfirmPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M17.94 17.94A10.97 10.97 0 0 1 12 19c-7 0-11-7-11-7 .95-1.76 2.24-3.31 3.78-4.58" stroke="#6c757d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M1 1l22 22" stroke="#6c757d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <small class="error" *ngIf="changeForm.get('confirm')?.touched && changeForm.get('confirm')?.invalid">Veuillez confirmer</small>
+        <small class="hint">Rappel: mot de passe max 10 caractères, min 3 chiffres et 1 caractère spécial.</small>
+      </div>
+
+      <button class="btn btn-warning w-100 mt-3" type="submit" [disabled]="changeForm.invalid">Changer le mot de passe</button>
+    </form>
+
+  </div>
+</div>

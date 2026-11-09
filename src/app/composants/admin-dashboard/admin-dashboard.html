@@ -1,0 +1,132 @@
+
+<div class="container py-5">
+
+  
+  <div class="dashboard-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h4 class="mb-0">Demandes d'ouverture de compte</h4>
+        <div class="text-muted small">Vue d'ensemble des demandes et actions rapides</div>
+      </div>
+      <div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="row g-3 mb-4 stats-grid">
+    <div class="col-12 col-sm-6 col-md-3">
+      <div class="stat-card p-3">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="stat-icon">📥</div>
+          <div class="text-end">
+            <div class="stat-number">{{ totalRequests }}</div>
+            <div class="stat-label">Total account requests</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-md-3">
+      <div class="stat-card p-3">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="stat-icon">⏳</div>
+          <div class="text-end">
+            <div class="stat-number">{{ pendingValidationRequests }}</div>
+            <div class="stat-label">Pending validation</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-md-3">
+      <div class="stat-card p-3">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="stat-icon">✅</div>
+          <div class="text-end">
+            <div class="stat-number">{{ approvedRequests }}</div>
+            <div class="stat-label">Approved</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-md-3">
+      <div class="stat-card p-3">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="stat-icon">❌</div>
+          <div class="text-end">
+            <div class="stat-number">{{ rejectedRequests }}</div>
+            <div class="stat-label">Rejected</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <input type="text" class="form-control mb-4" placeholder="Rechercher par nom, CIN ou email" [(ngModel)]="searchText" />
+
+  
+  <div class="card mb-3 shadow-sm" *ngFor="let req of filteredRequests()">
+    <div class="card-body req-card p-3">
+      <div class="d-flex req-grid align-items-start">
+
+        
+        <div class="req-left flex-grow-1">
+          <div class="fw-bold">{{ req.client?.prenom }} {{ req.client?.nom }}</div>
+          <div class="text-muted small">CIN: {{ req.client?.cin || '—' }}</div>
+          <div class="text-muted small">Email: {{ req.client?.email || '—' }}</div>
+        </div>
+
+        
+        <div class="req-middle text-center" style="min-width:160px">
+          <div>
+            <span class="badge"
+                  [ngClass]="{
+                    'status-draft': req.status === 'DRAFT',
+                    'status-docs': req.status === 'DOCUMENTS_UPLOADED',
+                    'status-pending': req.status === 'PENDING_VALIDATION',
+                    'status-approved': req.status === 'APPROVED',
+                    'status-rejected': req.status === 'REJECTED'
+                  }">{{ req.status }}</span>
+          </div>
+          <div class="text-muted small mt-2">{{ req.createdAt ? (req.createdAt | date:'short') : '' }}</div>
+        </div>
+
+        
+        <div class="req-right text-end" style="min-width:180px">
+          <div class="mb-2">
+            <button class="btn btn-success btn-sm me-2" (click)="validate(req.id)"
+                    [disabled]="req.status !== 'PENDING_VALIDATION'">Valider</button>
+            <button class="btn btn-danger btn-sm" (click)="reject(req.id)"
+                    [disabled]="req.status !== 'PENDING_VALIDATION'">Rejeter</button>
+          </div>
+          <div>
+            <button class="btn btn-outline-primary btn-sm" (click)="loadDocuments(req.id)">
+              {{ selectedRequestId === req.id ? 'Cacher documents' : 'Voir documents' }}
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      
+      <div class="doc-panel mt-3" [class.expanded]="selectedRequestId === req.id" [attr.aria-hidden]="selectedRequestId !== req.id">
+        <div class="doc-inner" *ngIf="selectedRequestId === req.id">
+          <div *ngFor="let doc of selectedDocuments">
+  <a
+    [href]="'http://localhost:8081/api/admin/documents/' + doc.id + '/download'"
+    target="_blank"
+    class="d-block text-primary mb-1"
+  >
+    📄 {{ doc.type }}
+  </a>
+</div>
+
+      </div>
+
+    </div>
+  </div>
+
+</div>

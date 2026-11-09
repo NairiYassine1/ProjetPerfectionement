@@ -1,0 +1,78 @@
+.dashboard-container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #042c66, #0b3a82);
+  padding: 40px 16px;
+  color: #fff;
+.dashboard-container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #042c66, #0b3a82);
+  padding: 40px 16px;
+  color: #fff;
+}
+
+.status-card {
+  max-width: 800px;
+  margin: 0 auto 24px auto;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.status-warning {
+  background: linear-gradient(90deg, #ffb347, #ff7a00);
+  color: #000;
+}
+
+.status-success {
+  background: linear-gradient(90deg, #2ecc71, #27ae60);
+}
+
+.status-danger {
+  background: linear-gradient(90deg, #e74c3c, #c0392b);
+}
+
+.details-card,
+.next-steps-card {
+  max-width: 800px;
+  margin: 0 auto 24px auto;
+  background: #ffffff;
+  color: #0b0b0b;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 14px 36px rgba(0,0,0,0.15);
+}
+
+.details-card h4,
+.next-steps-card h4 {
+  margin-bottom: 16px;
+  color: #042c66;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.next-steps-card ul {
+  padding-left: 20px;
+}
+
+.next-steps-card li {
+  margin-bottom: 8px;
+}
+
+.next-steps-card ul {
+  padding-left: 20px;
+}
+
+.next-steps-card li {
+  margin-bottom: 8px;
+}
+}

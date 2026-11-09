@@ -1,0 +1,379 @@
+<div class="container mt-5">
+  
+  <div class="row">
+    <div class="col-md-3">
+
+
+      <div class="indicator-card p-3">
+        <div class="indicator-inner d-flex align-items-stretch">
+          <ul class="list-group step-list flex-grow-1">
+            <li class="list-group-item d-flex justify-content-between align-items-center"
+              *ngFor="let step of steps"
+              [class.active-step]="currentStep === step.id"
+              (click)="goToStep(step.id)"
+              (keydown.enter)="goToStep(step.id)"
+              tabindex="0"
+              [attr.aria-disabled]="step.id > currentStep && !isStepValid(currentStep)">
+              <div class="step-label">{{ step.label }}</div>
+              <span class="badge badge-validated rounded-pill" *ngIf="currentStep > step.id"><span>✓</span></span>
+            </li>
+          </ul>
+          <div class="progress vertical-progress ms-3">
+            <div class="progress-bar progress-bar-orange" role="progressbar" [style.height.%]="progressPercent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-9">
+      <form [formGroup]="accountForm" (ngSubmit)="onSubmit()" class="content-card p-3">
+
+        <div *ngIf="isSubmitting && !showConfirmation && !showMismatchModal" class="submit-banner mt-2" role="status">
+          <small>Veuillez patienter — nous vérifions vos données...</small>
+        </div>
+
+        <div class="global-progress" aria-hidden="false">
+          <div class="global-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+               [attr.aria-valuenow]="progressPercent" [style.width.%]="progressPercent">
+          </div>
+        </div>
+
+        <div class="step step-anim" *ngIf="currentStep === 1">
+          <h4>Étape 1 : Informations personnelles</h4>
+          <div class="mb-3">
+            <label class="req">Prénom</label>
+            <input type="text" class="form-control" formControlName="prenom"
+              minlength="2" pattern="[A-Za-zÀ-ÖØ-öø-ÿ\s]{2,}" (input)="onNameInput($event,'prenom')"
+              [class.error-left]="accountForm.get('prenom')?.invalid && accountForm.get('prenom')?.touched">
+            <div class="field-error" *ngIf="accountForm.get('prenom')?.touched && accountForm.get('prenom')?.invalid">
+              <div class="alert alert-warning p-2 mt-2" role="alert">
+                <small *ngIf="accountForm.get('prenom')?.errors?.['required']">Le prénom est requis.</small>
+                <small *ngIf="accountForm.get('prenom')?.errors?.['minlength']">Le prénom doit contenir au moins 2 caractères.</small>
+                <small *ngIf="accountForm.get('prenom')?.errors?.['pattern']">Le prénom ne doit contenir que des lettres et espaces.</small>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="req">Nom</label>
+            <input type="text" class="form-control" formControlName="nom"
+              minlength="2" pattern="[A-Za-zÀ-ÖØ-öø-ÿ\s]{2,}" (input)="onNameInput($event,'nom')"
+              [class.error-left]="accountForm.get('nom')?.invalid && accountForm.get('nom')?.touched">
+            <div class="field-error" *ngIf="accountForm.get('nom')?.touched && accountForm.get('nom')?.invalid">
+              <div class="alert alert-warning p-2 mt-2" role="alert">
+                <small *ngIf="accountForm.get('nom')?.errors?.['required']">Le nom est requis.</small>
+                <small *ngIf="accountForm.get('nom')?.errors?.['minlength']">Le nom doit contenir au moins 2 caractères.</small>
+                <small *ngIf="accountForm.get('nom')?.errors?.['pattern']">Le nom ne doit contenir que des lettres et espaces.</small>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="req">CIN</label>
+            <input type="text" inputmode="numeric" class="form-control" formControlName="cin"
+              maxlength="8" minlength="8" pattern="[0-9]{8}"
+              placeholder="12345678"
+              (keypress)="allowDigits($event)" (input)="onDigitsInput($event,'cin')" (paste)="onPasteDigits($event,'cin')"
+              [class.error-left]="accountForm.get('cin')?.invalid && accountForm.get('cin')?.touched">
+            <div class="field-error" *ngIf="accountForm.get('cin')?.touched && accountForm.get('cin')?.invalid">
+              <div class="alert alert-warning p-2 mt-2" role="alert">
+                <small *ngIf="accountForm.get('cin')?.errors?.['required']">Le CIN est requis.</small>
+                <small *ngIf="accountForm.get('cin')?.errors?.['pattern'] || accountForm.get('cin')?.errors?.['minlength'] || accountForm.get('cin')?.errors?.['maxlength']">Le CIN doit comporter exactement 8 chiffres.</small>
+              </div>
+            </div>
+            <div class="mt-1">
+              <small class="text-info" *ngIf="checkingCin">Veuillez patienter, vérification du CIN...</small>
+            </div>
+            <div *ngIf="blacklistedError" class="alert alert-danger p-2 mt-2">{{ blacklistedError }}</div>
+          </div>
+          <div class="mb-3">
+            <label class="req">Date de naissance</label>
+            <input type="date" class="form-control" formControlName="dateNaissance"
+              [attr.max]="maxDate" [attr.min]="minDate"
+              placeholder="jj/mm/aaaa"
+              [class.error-left]="accountForm.get('dateNaissance')?.invalid && accountForm.get('dateNaissance')?.touched">
+            <div class="field-error"
+              *ngIf="accountForm.get('dateNaissance')?.touched && accountForm.get('dateNaissance')?.invalid">
+              <div class="alert alert-warning p-2 mt-2" role="alert">
+                <small *ngIf="accountForm.get('dateNaissance')?.errors?.['required']">La date de naissance est requise.</small>
+                <small *ngIf="accountForm.get('dateNaissance')?.errors?.['tooYoung']">Vous devez avoir au moins 18 ans.</small>
+                <small *ngIf="accountForm.get('dateNaissance')?.errors?.['tooOld']">L'âge maximal autorisé est 100 ans.</small>
+                <small *ngIf="accountForm.get('dateNaissance')?.errors?.['inFuture']">La date de naissance ne peut pas être dans le futur.</small>
+                <small *ngIf="accountForm.get('dateNaissance')?.errors?.['invalidDate']">Date invalide.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step step-anim" *ngIf="currentStep === 2">
+          <h4>Étape 2 : Coordonnées</h4>
+          <div class="mb-3">
+            <label class="req">Email</label>
+            <input type="email" class="form-control" formControlName="email"
+              placeholder="votre@email.com"
+              (focus)="showEmailHelper = true"
+              [class.error-left]="accountForm.get('email')?.invalid && accountForm.get('email')?.touched">
+
+              <div class="email-helper alert alert-info d-flex justify-content-between align-items-start mt-2"
+                 *ngIf="showEmailHelper" role="status">
+              <div>
+                <small>Veuillez saisir l'adresse e-mail que vous utilisez actuellement — nous vous enverrons un e-mail plus tard. Vous pouvez fermer ce message.</small>
+              </div>
+              <button type="button" class="btn-close ms-2" aria-label="Fermer" (click)="dismissEmailHelper()"></button>
+            </div>
+
+            <div class="field-error" *ngIf="accountForm.get('email')?.touched && accountForm.get('email')?.invalid">
+              <div class="alert alert-warning p-2 mt-2" role="alert">
+                <small *ngIf="accountForm.get('email')?.errors?.['required']">L'email est requis.</small>
+                <small *ngIf="accountForm.get('email')?.errors?.['email']">Email invalide.</small>
+                <small *ngIf="accountForm.get('email')?.errors?.['notGmail']">L'email doit se terminer par
+                  @gmail.com.</small>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="req">Mobile</label>
+            <input type="text" inputmode="numeric" class="form-control" formControlName="mobile"
+              placeholder="9xxxxxxx"
+              maxlength="8" minlength="8" pattern="[0-9]{8}"
+              (keypress)="allowDigits($event)" (input)="onDigitsInput($event,'mobile')" (paste)="onPasteDigits($event,'mobile')"
+              [class.error-left]="accountForm.get('mobile')?.invalid && accountForm.get('mobile')?.touched">
+            <div class="field-error" *ngIf="accountForm.get('mobile')?.touched && accountForm.get('mobile')?.invalid">
+              <div class="alert alert-warning p-2 mt-2" role="alert">
+                <small *ngIf="accountForm.get('mobile')?.errors?.['required']">Le numéro est requis.</small>
+                <small *ngIf="accountForm.get('mobile')?.errors?.['pattern'] || accountForm.get('mobile')?.errors?.['minlength'] || accountForm.get('mobile')?.errors?.['maxlength']">Le numéro doit comporter exactement 8 chiffres.</small>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="req">Adresse</label>
+            <input type="text" class="form-control" formControlName="adresse"
+              [class.error-left]="accountForm.get('adresse')?.invalid && accountForm.get('adresse')?.touched">
+            <div class="field-error" *ngIf="accountForm.get('adresse')?.touched && accountForm.get('adresse')?.invalid">
+              <div class="alert alert-warning p-2 mt-2" role="alert">
+                <small *ngIf="accountForm.get('adresse')?.errors?.['required']">L'adresse est requise.</small>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="req">Ville</label>
+            <input type="text" class="form-control" formControlName="ville"
+              [class.error-left]="accountForm.get('ville')?.invalid && accountForm.get('ville')?.touched">
+            <div class="field-error" *ngIf="accountForm.get('ville')?.touched && accountForm.get('ville')?.invalid">
+              <div class="alert alert-warning p-2 mt-2" role="alert">
+                <small *ngIf="accountForm.get('ville')?.errors?.['required']">La ville est requise.</small>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="req">Gouvernorat</label>
+            <input type="text" class="form-control" formControlName="gouvernorat"
+              [class.error-left]="accountForm.get('gouvernorat')?.invalid && accountForm.get('gouvernorat')?.touched">
+            <div class="field-error"
+              *ngIf="accountForm.get('gouvernorat')?.touched && accountForm.get('gouvernorat')?.invalid">
+              <div class="alert alert-warning p-2 mt-2" role="alert">
+                <small *ngIf="accountForm.get('gouvernorat')?.errors?.['required']">Le gouvernorat est requis.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step step-anim" *ngIf="currentStep === 3">
+          <h4>Étape 3 : Vérification identité</h4>
+          <div class="mb-3">
+            <label class="req">Photo CIN</label>
+            <input #cinFileInput type="file" class="form-control" (change)="onFileChange($event, 'cinFile')">
+            <div class="mt-2" *ngIf="accountForm.get('cinFile')?.value">
+              <small class="text-success">Fichier joint: {{ accountForm.get('cinFile')?.value.name }}</small>
+              <button type="button" class="btn btn-link btn-sm ms-2" (click)="removeFile('cinFile', cinFileInput)">Supprimer</button>
+            </div>
+            <div class="field-error" *ngIf="accountForm.get('cinFile')?.touched && accountForm.get('cinFile')?.invalid">
+              <div class="alert alert-warning p-2 mt-2" role="alert">
+                <small *ngIf="accountForm.get('cinFile')?.errors?.['required']">La photo du CIN est requise.</small>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="req">Fiche de paie</label>
+            <input #ficheFileInput type="file" class="form-control" (change)="onFileChange($event, 'fichePaieFile')">
+            <div class="mt-2" *ngIf="accountForm.get('fichePaieFile')?.value">
+              <small class="text-success">Fichier joint: {{ accountForm.get('fichePaieFile')?.value.name }}</small>
+              <button type="button" class="btn btn-link btn-sm ms-2" (click)="removeFile('fichePaieFile', ficheFileInput)">Supprimer</button>
+            </div>
+            <div class="field-error"
+              *ngIf="accountForm.get('fichePaieFile')?.touched && accountForm.get('fichePaieFile')?.invalid">
+              <div class="alert alert-warning p-2 mt-2" role="alert">
+                <small *ngIf="accountForm.get('fichePaieFile')?.errors?.['required']">La fiche de paie est
+                  requise.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step step-anim" *ngIf="currentStep === 4">
+          <h4>Étape 4 : Préférences compte</h4>
+          <div class="row g-4 pref-grid">
+  
+  <div class="col-md-6">
+    <div class="pref-card"
+         (click)="accountForm.get('typeCompte')?.setValue('standard')"
+         [class.selected]="accountForm.get('typeCompte')?.value==='standard'">
+      <h5>Compte Standard</h5>
+      <p>Usage quotidien, carte bancaire incluse, frais réduits.</p>
+    </div>
+  </div>
+
+  
+  <div class="col-md-6">
+    <div class="pref-card premium"
+         (click)="accountForm.get('typeCompte')?.setValue('premium')"
+         [class.selected]="accountForm.get('typeCompte')?.value==='premium'">
+      <h5>Compte Premium</h5>
+      <p>Plafonds élevés, assistance prioritaire, services exclusifs.</p>
+    </div>
+  </div>
+
+  
+  <div class="col-md-6">
+    <div class="pref-card pro"
+         (click)="accountForm.get('typeCompte')?.setValue('professionnel')"
+         [class.selected]="accountForm.get('typeCompte')?.value==='professionnel'">
+      <h5>Compte Professionnel</h5>
+      <p>Solutions pour indépendants et entreprises.</p>
+    </div>
+  </div>
+
+  
+  <div class="col-md-6">
+    <div class="pref-card student"
+         (click)="accountForm.get('typeCompte')?.setValue('student')"
+         [class.selected]="accountForm.get('typeCompte')?.value==='student'">
+      <h5>Compte Étudiant</h5>
+      <p>Sans frais, adapté aux études et jeunes actifs.</p>
+    </div>
+  </div>
+</div>
+
+<input type="hidden" formControlName="typeCompte">
+
+          <div class="field-error"
+            *ngIf="accountForm.get('typeCompte')?.touched && accountForm.get('typeCompte')?.invalid">
+            <div class="alert alert-warning p-2 mt-2" role="alert">Choisissez un type de compte.</div>
+          </div>
+          <div class="mb-3 mt-3">
+            <label class="req">Profession</label>
+            <input type="text" class="form-control" formControlName="profession"
+              [class.error-left]="accountForm.get('profession')?.invalid && accountForm.get('profession')?.touched">
+            <div class="field-error"
+              *ngIf="accountForm.get('profession')?.touched && accountForm.get('profession')?.invalid">
+              <div class="alert alert-warning p-2 mt-2" role="alert">
+                <small *ngIf="accountForm.get('profession')?.errors?.['required']">La profession est requise.</small>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="req">Domaine d'activité</label>
+            <input type="text" class="form-control" formControlName="domaineActivite"
+              [class.error-left]="accountForm.get('domaineActivite')?.invalid && accountForm.get('domaineActivite')?.touched">
+            <div class="field-error"
+              *ngIf="accountForm.get('domaineActivite')?.touched && accountForm.get('domaineActivite')?.invalid">
+              <div class="alert alert-warning p-2 mt-2" role="alert">
+                <small *ngIf="accountForm.get('domaineActivite')?.errors?.['required']">Le domaine d'activité est
+                  requis.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step step-anim" *ngIf="currentStep === 5">
+          <h4>Étape 5 : Conditions & versement</h4>
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" formControlName="acceptTerms">
+            <label class="form-check-label req">J'accepte les termes et conditions</label>
+          </div>
+          <div class="field-error"
+            *ngIf="accountForm.get('acceptTerms')?.touched && accountForm.get('acceptTerms')?.invalid">
+            <div class="alert alert-warning p-2 mt-2" role="alert">
+              <small>Vous devez accepter les termes et conditions.</small>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label>Versement initial</label>
+            <input type="number" class="form-control" formControlName="versementInitial" min="1"
+              [class.error-left]="accountForm.get('versementInitial')?.invalid && accountForm.get('versementInitial')?.touched">
+            <div class="field-error"
+              *ngIf="accountForm.get('versementInitial')?.touched && accountForm.get('versementInitial')?.invalid">
+              <div class="alert alert-warning p-2 mt-2" role="alert">
+                <small *ngIf="accountForm.get('versementInitial')?.errors?.['required']">Le versement initial est
+                  requis.</small>
+                <small *ngIf="accountForm.get('versementInitial')?.errors?.['min']">Le versement initial doit être au
+                  moins 300.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step step-anim" *ngIf="currentStep === 6">
+          <div class="text-center">
+            <h4>Étape 6 : Validation finale</h4>
+            <p>Merci ! Toutes vos informations ont été saisies. <br>
+              
+            </p>
+            <button class="btn btn-warning" type="submit">Envoyer</button>
+
+          </div>
+        </div>
+
+        <div class="mt-3 d-flex justify-content-between">
+          <button class="btn btn-secondary" (click)="prevStep()" [disabled]="currentStep === 1"
+            type="button">Précédent</button>
+          <button class="btn btn-warning" type="button" (click)="confirmNext()"
+            [disabled]="!isStepValid(currentStep) || checkingCin" *ngIf="currentStep < steps.length">
+            Suivant
+          </button>
+        </div>
+        
+
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<div *ngIf="showConfirmation" class="oc-modal-backdrop" role="dialog" aria-modal="true">
+  <div class="oc-modal" role="document">
+    <header class="oc-modal-header">
+      <h3>Demande envoyée avec succès</h3>
+    </header>
+    <div class="oc-modal-body">
+      <p>
+  Nous avons bien reçu votre demande d’ouverture de compte.<br><br>
+
+  <strong>
+    Un email vous sera envoyé contenant vos identifiants de connexion.
+  </strong><br><br>
+
+  Veuillez vous connecter afin de suivre l’état de votre demande
+  et finaliser le processus.
+</p>
+
+    </div>
+    <footer class="oc-modal-footer">
+      <a [routerLink]="['/auth']" [queryParams]="{mode:'signin'}" class="btn btn-outline-primary modal-outline">Se connecter</a>
+      <button type="button" class="btn btn-link modal-later" (click)="showConfirmation=false">Plus tard</button>
+    </footer>
+  </div>
+</div>
+
+<div *ngIf="showMismatchModal" class="oc-modal-backdrop" role="dialog" aria-modal="true">
+  <div class="oc-modal" role="document">
+    <header class="oc-modal-header">
+      <h3>Problème avec le CIN</h3>
+    </header>
+    <div class="oc-modal-body">
+      <p>{{ mismatchMessage }}</p>
+    </div>
+    <footer class="oc-modal-footer">
+      <button class="btn btn-outline-primary" type="button" (click)="reviewFormAfterMismatch()">Modifier le CIN</button>
+      <button class="btn btn-warning" type="button" (click)="continueDespiteMismatch()">Continuer quand même</button>
+    </footer>
+  </div>
+</div>
